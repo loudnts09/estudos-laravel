@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Cliente;
+use Illuminate\Http\Request;
+use App\Pedido;
 
-class ClienteController extends Controller
+class PedidoController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -14,8 +15,9 @@ class ClienteController extends Controller
      */
     public function index(Request $request)
     {
-        $clientes = Cliente::paginate(10);
-        return view('app.cliente.index', ['titulo' => 'Clientes', 'clientes' => $clientes, 'request' => $request->all()]);
+        $pedidos = Pedido::paginate(10);
+
+        return view('app.pedido.index', ['titulo' => 'Pedidos', 'pedidos' => $pedidos, 'request' => $request->all()]);
     }
 
     /**
@@ -25,7 +27,8 @@ class ClienteController extends Controller
      */
     public function create()
     {
-        return view('app.cliente.create', ['titulo' => 'Novo Cliente']);
+        $clientes = Cliente::all();
+        return view('app.pedido.create', ['titulo' => 'Novo Pedido', 'clientes' => $clientes]);
     }
 
     /**
@@ -37,23 +40,20 @@ class ClienteController extends Controller
     public function store(Request $request)
     {
         $regras = [
-            'nome' => 'required|min:3|max:40',
+            'cliente_id' => 'exists:clientes,id'
         ];
 
         $feedback = [
-            'required' => 'O campo ::attribute deve ser preenchido',
-            'nome.min' => 'O campo nome deve ter no mínimo 3 caracteres',
-            'nome.max' => 'O campo nome deve ter no máximo 40 caracteres'
+            'cliente_id.exists' => 'O cliente informado não existe'
         ];
 
         $request->validate($regras, $feedback);
+        
+        $pedido = new Pedido;
+        $pedido->cliente_id = $request->get('cliente_id');
+        $pedido->save();
 
-        $cliente = new Cliente();
-
-        $cliente->nome = $request->get('nome');
-        $cliente->save();
-
-        return redirect()->route('cliente.index');
+        return redirect()->route('pedido.index');
     }
 
     /**
